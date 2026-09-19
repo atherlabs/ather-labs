@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://atherlabs.vercel.app/sitemap.xml
