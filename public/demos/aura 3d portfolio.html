@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AURA ONE — Sound, Sculpted</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+
+  :root{
+    --bg:#06070a;
+    --fg:#f2f3f5;
+    --muted:#7d838d;
+    --accent:#c9a227;
+    --line:rgba(255,255,255,.10);
+  }
+
+  html{scroll-behavior:smooth}
+
+  body{
+    background:var(--bg);
+    color:var(--fg);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    user-select:none;
+  }
+
+  /* ---------- ambient background ---------- */
+  body::before{
+    content:'';
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background:
+      radial-gradient(ellipse 70% 55% at 50% 42%, rgba(46,54,74,.60), transparent 68%),
+      radial-gradient(ellipse 55% 45% at 82% 88%, rgba(74,48,110,.28), transparent 70%),
+      radial-gradient(ellipse 50% 40% at 12% 12%, rgba(30,60,90,.22), transparent 70%);
+  }
+
+  #scene{
+    position:fixed; inset:0; z-index:1;
+    width:100%; height:100%; display:block;
+    cursor:grab;
+  }
+  #scene:active{cursor:grabbing}
+
+  .grain{
+    position:fixed; inset:0; z-index:3; pointer-events:none;
+    opacity:.05; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ---------- loader ---------- */
+  #loader{
+    position:fixed; inset:0; z-index:100;
+    background:#06070a;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:22px;
+    transition:opacity .8s ease, visibility .8s ease;
+  }
+  #loader.done{opacity:0; visibility:hidden}
+  .loader-mark{
+    font-family:'Syne',sans-serif; font-weight:800; font-size:15px;
+    letter-spacing:.5em; text-indent:.5em; color:#fff; opacity:.85;
+  }
+  .loader-bar{width:160px; height:1px; background:rgba(255,255,255,.12); overflow:hidden}
+  .loader-bar i{display:block; height:100%; width:0%; background:var(--accent); transition:width .3s ease}
+
+  /* ---------- nav ---------- */
+  nav{
+    position:fixed; top:0; left:0; right:0; z-index:10;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:24px 5vw;
+    pointer-events:none;
+  }
+  nav a, nav button{pointer-events:auto}
+  .logo{
+    font-family:'Syne',sans-serif; font-weight:800;
+    font-size:17px; letter-spacing:.22em;
+  }
+  .logo span{color:var(--accent); font-size:10px; vertical-align:super; letter-spacing:0}
+  .nav-links{display:flex; gap:38px; list-style:none}
+  .nav-links a{
+    color:var(--muted); text-decoration:none; font-size:13px;
+    letter-spacing:.06em; text-transform:uppercase; font-weight:500;
+    transition:color .3s ease; position:relative;
+  }
+  .nav-links a::after{
+    content:''; position:absolute; left:0; bottom:-6px; height:1px; width:0;
+    background:var(--accent); transition:width .35s cubic-bezier(.2,.8,.2,1);
+  }
+  .nav-links a:hover{color:#fff}
+  .nav-links a:hover::after{width:100%}
+
+  .btn{
+    pointer-events:auto;
+    border:1px solid var(--line);
+    background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02));
+    color:#fff; padding:13px 28px; border-radius:100px;
+    font-family:inherit; font-size:13px; letter-spacing:.04em; font-weight:500;
+    cursor:pointer; white-space:nowrap;
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    transition:transform .35s cubic-bezier(.2,.8,.2,1), background .35s ease, color .35s ease, box-shadow .35s ease;
+  }
+  .btn:hover{background:#fff; color:#07080b; transform:translateY(-2px); box-shadow:0 12px 30px rgba(255,255,255,.10)}
+  .btn:active{transform:translateY(0)}
+
+  .btn.primary{
+    background:var(--accent); color:#0a0a0a; border-color:transparent;
+    font-weight:600; padding:16px 36px; font-size:14px;
+    box-shadow:0 10px 40px -10px var(--accent);
+    transition:transform .35s cubic-bezier(.2,.8,.2,1), filter .35s ease, box-shadow .35s ease;
+  }
+  .btn.primary:hover{filter:brightness(1.12); transform:translateY(-2px); box-shadow:0 18px 50px -12px var(--accent)}
+
+  .btn-sm{padding:10px 20px; font-size:12px}
+
+  /* ---------- content ---------- */
+  main{position:relative; z-index:4; pointer-events:none}
+  section{position:relative}
+
+  .eyebrow{
+    font-size:11px; letter-spacing:.32em; text-transform:uppercase;
+    color:var(--accent); font-weight:600; margin-bottom:22px;
+  }
+
+  h1{
+    font-family:'Syne',sans-serif; font-weight:800;
+    font-size:clamp(44px, 7.2vw, 104px);
+    line-height:.92; letter-spacing:-.035em;
+  }
+  h1 em{
+    font-style:normal;
+    background:linear-gradient(180deg,#fff 15%, #6c7280 130%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+
+  h2{
+    font-family:'Syne',sans-serif; font-weight:700;
+    font-size:clamp(30px, 3.6vw, 50px);
+    line-height:1.04; letter-spacing:-.03em; margin-bottom:22px;
+  }
+
+  .sub{
+    font-size:clamp(14px, 1.15vw, 16px); line-height:1.75;
+    color:var(--muted); font-weight:300; max-width:460px; margin:26px auto 0;
+  }
+
+  .panel{
+    opacity:0; transform:translateY(34px);
+    transition:opacity 1s cubic-bezier(.2,.8,.2,1), transform 1s cubic-bezier(.2,.8,.2,1);
+  }
+  .panel.visible{opacity:1; transform:none}
+
+  /* hero */
+  .hero{
+    min-height:100vh;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:space-between;
+    padding:132px 6vw 46px;
+    text-align:center;
+  }
+  .hero-bottom{
+    display:flex; flex-direction:column; align-items:center; gap:20px;
+  }
+  .scroll-hint{
+    display:flex; align-items:center; gap:10px;
+    font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:#5e646e;
+  }
+  .scroll-hint i{
+    display:block; width:5px; height:5px; border-radius:50%;
+    background:var(--accent); animation:pulse 2.2s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:.25; transform:scale(.7)}50%{opacity:1; transform:scale(1)}}
+
+  /* features */
+  .features{
+    min-height:100vh; display:flex; align-items:center;
+    padding:0 6vw;
+  }
+  .features .panel{max-width:440px}
+  .feature-list{margin-top:44px; display:flex; flex-direction:column; gap:2px}
+  .feature{
+    display:flex; gap:22px; padding:22px 0;
+    border-top:1px solid var(--line);
+  }
+  .feature:last-child{border-bottom:1px solid var(--line)}
+  .feature .num{
+    font-family:'Syne',sans-serif; font-size:12px; font-weight:700;
+    color:var(--accent); padding-top:3px; letter-spacing:.06em;
+  }
+  .feature h4{
+    font-size:14px; font-weight:600; margin-bottom:7px; letter-spacing:.01em;
+  }
+  .feature p{font-size:13px; line-height:1.65; color:var(--muted); font-weight:300}
+
+  /* colors */
+  .colors{
+    min-height:100vh; display:flex; align-items:center; justify-content:flex-end;
+    padding:0 6vw;
+  }
+  .colors .panel{max-width:420px; width:100%}
+  .swatches{display:flex; gap:14px; margin-top:38px; flex-wrap:wrap}
+  .swatch{
+    pointer-events:auto;
+    width:46px; height:46px; border-radius:50%;
+    border:1px solid rgba(255,255,255,.14);
+    cursor:pointer; position:relative;
+    transition:transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s ease;
+    background:transparent; padding:0;
+  }
+  .swatch i{
+    position:absolute; inset:5px; border-radius:50%; display:block;
+    box-shadow:inset 0 1px 2px rgba(255,255,255,.25);
+  }
+  .swatch::after{
+    content:''; position:absolute; inset:-5px; border-radius:50%;
+    border:1px solid transparent; transition:border-color .35s ease;
+  }
+  .swatch:hover{transform:translateY(-3px) scale(1.05)}
+  .swatch.active::after{border-color:var(--accent)}
+  .swatch-name{
+    margin-top:26px; font-size:13px; letter-spacing:.16em;
+    text-transform:uppercase; color:#fff; font-weight:500;
+  }
+  .swatch-desc{margin-top:10px; font-size:13px; color:var(--muted); font-weight:300; line-height:1.6}
+
+  /* cta */
+  .cta{
+    min-height:100vh;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:space-between;
+    padding:120px 6vw 46px;
+    text-align:center;
+  }
+  .cta p.lead{color:var(--muted); font-size:14px; font-weight:300; margin-top:16px; letter-spacing:.02em}
+  .cta .btn.primary{margin-top:30px}
+
+  .specs{
+    display:grid; grid-template-columns:repeat(4,1fr);
+    gap:1px; width:100%; max-width:900px;
+    background:var(--line); border-top:1px solid var(--line);
+  }
+  .spec{
+    background:rgba(6,7,10,.55);
+    backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+    padding:22px 10px;
+  }
+  .spec b{
+    display:block; font-family:'Syne',sans-serif; font-size:22px;
+    font-weight:700; margin-bottom:6px; letter-spacing:-.02em;
+  }
+  .spec span{
+    font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted);
+  }
+
+  footer{
+    padding:26px 5vw; text-align:center;
+    font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:#4a4f58;
+  }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 860px){
+    .nav-links{display:none}
+    nav{padding:18px 5vw}
+    .hero{padding:110px 6vw 40px}
+    h1{font-size:clamp(38px, 12vw, 60px)}
+    .sub{font-size:13px}
+    .features, .colors{padding:0 6vw; justify-content:center}
+    .features .panel, .colors .panel{
+      max-width:100%; text-align:center;
+      background:rgba(6,7,10,.42);
+      backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+      padding:30px 22px; border-radius:20px;
+      border:1px solid rgba(255,255,255,.05);
+    }
+    .colors .panel{text-align:center}
+    .swatches{justify-content:center}
+    .feature{text-align:left}
+    .specs{grid-template-columns:repeat(2,1fr)}
+    .spec b{font-size:18px}
+    .cta{padding:100px 6vw 40px}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.01ms !important; transition-duration:.01ms !important}
+    html{scroll-behavior:auto}
+  }
+</style>
+</head>
+<body>
+
+  <!-- LOADER -->
+  <div id="loader">
+    <div class="loader-mark">AURA</div>
+    <div class="loader-bar"><i id="loadBar"></i></div>
+  </div>
+
+  <!-- 3D CANVAS -->
+  <canvas id="scene"></canvas>
+  <div class="grain"></div>
+
+  <!-- NAV -->
+  <nav>
+    <div class="logo">AURA<span>®</span></div>
+    <ul class="nav-links">
+      <li><a href="#features">Engineering</a></li>
+      <li><a href="#colors">Finishes</a></li>
+      <li><a href="#order">Specs</a></li>
+    </ul>
+    <button class="btn btn-sm" onclick="document.getElementById('order').scrollIntoView()">Pre-order</button>
+  </nav>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero" id="top">
+      <div class="panel visible">
+        <p class="eyebrow">Aura Acoustics — 2025</p>
+        <h1>AURA <em>ONE</em></h1>
+        <p class="sub">Spatial audio sculpted in aerospace aluminium. Silence the world. Hear everything.</p>
+      </div>
+
+      <div class="hero-bottom panel visible">
+        <button class="btn primary" onclick="document.getElementById('order').scrollIntoView()">Pre-order · $549</button>
+        <div class="scroll-hint"><i></i> Drag to rotate — scroll to explore</div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="features" id="features">
+      <div class="panel">
+        <p class="eyebrow">Engineering</p>
+        <h2>Built to disappear.</h2>
+        <p class="sub" style="margin-left:0;text-align:left">
+          Every component was stripped back until only the essential remained. What's left is 38 grams of
+          machined aluminium, memory foam, and a silence so complete you'll forget you're wearing them.
+        </p>
+
+        <div class="feature-list">
+          <div class="feature">
+            <span class="num">01</span>
+            <div>
+              <h4>Adaptive ANC&nbsp;∞</h4>
+              <p>Eight microphones sample your environment 48,000 times a second and cancel up to 42 dB of noise.</p>
+            </div>
+          </div>
+          <div class="feature">
+            <span class="num">02</span>
+            <div>
+              <h4>40mm Beryllium Drivers</h4>
+              <p>Hand-matched drivers deliver 5 Hz – 40 kHz with less than 0.05% total harmonic distortion.</p>
+            </div>
+          </div>
+          <div class="feature">
+            <span class="num">03</span>
+            <div>
+              <h4>Spatial Head Tracking</h4>
+              <p>Six-axis gyroscopic tracking pins sound to the world, not to your head.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COLORS -->
+    <section class="colors" id="colors">
+      <div class="panel">
+        <p class="eyebrow">Finishes</p>
+        <h2>Five finishes.<br>Zero compromise.</h2>
+        <p class="sub" style="margin-left:0">
+          Anodised, bead-blasted, and hand-polished. Choose a finish — the sound stays identical.
+        </p>
+        <div class="swatches" id="swatches"></div>
+        <div class="swatch-name" id="swatchName">Obsidian Gold</div>
+        <div class="swatch-desc" id="swatchDesc">Anodised black aluminium with 24k gold-plated accents.</div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta" id="order">
+      <div class="panel">
+        <p class="eyebrow">Available Now</p>
+        <h2>Own the silence.</h2>
+        <p class="lead">Free express shipping · 30-day returns · 2-year warranty</p>
+        <button class="btn primary">Pre-order — $549</button>
+      </div>
+
+      <div class="specs">
+        <div class="spec"><b>40h</b><span>Battery</span></div>
+        <div class="spec"><b>42dB</b><span>Noise Cancel</span></div>
+        <div class="spec"><b>248g</b><span>Weight</span></div>
+        <div class="spec"><b>LDAC</b><span>Hi-Res Audio</span></div>
+      </div>
+    </section>
+
+    <footer>© 2025 Aura Acoustics — Designed in Zürich</footer>
+  </main>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+/* ============================================================
+   RENDERER / SCENE / CAMERA
+   ============================================================ */
+const canvas   = document.querySelector('#scene');
+const renderer = new THREE.WebGLRenderer({
+  canvas, antialias: true, alpha: true, powerPreference: 'high-performance'
+});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.toneMapping        = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.08;
+
+const scene  = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 200);
+camera.position.set(0, 0, 7);
+scene.add(camera);
+
+/* ============================================================
+   ENVIRONMENT + LIGHTS
+   ============================================================ */
+const pmrem  = new THREE.PMREMGenerator(renderer);
+const envTex = pmrem.fromScene(new RoomEnvironment(), 0.05).texture;
+scene.environment = envTex;
+pmrem.dispose();
+
+scene.add(new THREE.HemisphereLight(0x9fb4ff, 0x0a0a0c, 0.45));
+
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.9);
+keyLight.position.set(5, 8, 7);
+scene.add(keyLight);
+
+const fillLight = new THREE.DirectionalLight(0x7fa2ff, 0.9);
+fillLight.position.set(-7, 1, 5);
+scene.add(fillLight);
+
+const rimLight = new THREE.DirectionalLight(0xff5f8f, 1.3);
+rimLight.position.set(-2, -5, -8);
+scene.add(rimLight);
+
+const topGlow = new THREE.DirectionalLight(0xffffff, 0.7);
+topGlow.position.set(0, 10, 0);
+scene.add(topGlow);
+
+/* ============================================================
+   MATERIALS
+   ============================================================ */
+const materials = {
+  shell: new THREE.MeshPhysicalMaterial({
+    color: 0x191b1f, metalness: 0.55, roughness: 0.30,
+    clearcoat: 1, clearcoatRoughness: 0.12,
+    envMapIntensity: 0.95, side: THREE.DoubleSide
+  }),
+  accent: new THREE.MeshPhysicalMaterial({
+    color: 0xc9a227, metalness: 1.0, roughness: 0.20,
+    envMapIntensity: 1.25
+  }),
+  cushion: new THREE.MeshStandardMaterial({
+    color: 0x0b0c0f, roughness: 0.96, metalness: 0.02,
+    envMapIntensity: 0.35
+  }),
+  mesh: new THREE.MeshStandardMaterial({
+    color: 0x14161a, roughness: 0.55, metalness: 0.75,
+    envMapIntensity: 0.7, side: THREE.DoubleSide
+  })
+};
+
+/* ============================================================
+   BUILD PRODUCT — headphones from primitives
+   ============================================================ */
+const BAND_R = 1.18;
+
+function buildCup(side) {
+  const g = new THREE.Group();
+  g.position.set(side * BAND_R, -0.32, 0);
+
+  /* slider arm */
+  const arm = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.062, 0.062, 0.52, 24),
+    materials.accent
+  );
+  arm.position.set(0, 0.26, 0);
+  g.add(arm);
+
+  /* main shell — lathe profile for a rounded disc */
+  const profile = [
+    [0.00,  0.220], [0.26,  0.220], [0.40,  0.195], [0.485, 0.135],
+    [0.515, 0.050], [0.515,-0.090], [0.490,-0.155], [0.420,-0.200],
+    [0.280,-0.220], [0.00, -0.220]
+  ].map(p => new THREE.Vector2(p[0], p[1]));
+
+  const shell = new THREE.Mesh(new THREE.LatheGeometry(profile, 72), materials.shell);
+  shell.rotation.z = -side * Math.PI / 2;
+  g.add(shell);
+
+  /* outer accent ring */
+  const ring = new THREE.Mesh(
+    new THREE.TorusGeometry(0.40, 0.042, 18, 72),
+    materials.accent
+  );
+  ring.rotation.y = Math.PI / 2;
+  ring.position.x = side * 0.19;
+  g.add(ring);
+
+  /* centre logo dot */
+  const dot = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.095, 0.095, 0.03, 32),
+    materials.accent
+  );
+  dot.rotation.z = Math.PI / 2;
+  dot.position.x = side * 0.225;
+  g.add(dot);
+
+  /* ear cushion */
+  const cushion = new THREE.Mesh(
+    new THREE.TorusGeometry(0.355, 0.155, 26, 64),
+    materials.cushion
+  );
+  cushion.rotation.y = Math.PI / 2;
+  cushion.position.x = -side * 0.22;
+  g.add(cushion);
+
+  /* inner driver mesh */
+  const inner = new THREE.Mesh(new THREE.CircleGeometry(0.37, 48), materials.mesh);
+  inner.rotation.y = -side * Math.PI / 2;
+  inner.position.x = -side * 0.20;
+  g.add(inner);
+
+  return g;
+}
+
+function buildProduct() {
+  const model = new THREE.Group();
+
+  /* headband — half torus arc */
+  const band = new THREE.Mesh(
+    new THREE.TorusGeometry(BAND_R, 0.075, 26, 120, Math.PI),
+    materials.shell
+  );
+  model.add(band);
+
+  /* accent stripe across the crown */
+  const arc = Math.PI * 0.5;
+  const stripe = new THREE.Mesh(
+    new THREE.TorusGeometry(BAND_R, 0.086, 26, 90, arc),
+    materials.accent
+  );
+  stripe.rotation.z = Math.PI / 2 - arc / 2;
+  model.add(stripe);
+
+  /* earcups */
+  model.add(buildCup( 1));
+  model.add(buildCup(-1));
+
+  return model;
+}
+
+/* hierarchy: productGroup (scroll) → pivot (drag) → model (float) */
+const productGroup = new THREE.Group();
+scene.add(productGroup);
+
+const pivot = new THREE.Group();
+productGroup.add(pivot);
+
+const model = buildProduct();
+model.position.y = -0.30;   // recentre visual mass
+pivot.add(model);
+
+/* ============================================================
+   PARTICLE DUST
+   ============================================================ */
+const PCOUNT = 420;
+const pPos   = new Float32Array(PCOUNT * 3);
+for (let i = 0; i < PCOUNT; i++) {
+  pPos[i * 3]     = (Math.random() - 0.5) * 26;
+  pPos[i * 3 + 1] = (Math.random() - 0.5) * 18;
+  pPos[i * 3 + 2] = (Math.random() - 0.5) * 14 - 4;
+}
+const pGeo = new THREE.BufferGeometry();
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+const particles = new THREE.Points(pGeo, new THREE.PointsMaterial({
+  size: 0.03, color: 0x93a4c4, transparent: true, opacity: 0.55,
+  depthWrite: false, sizeAttenuation: true
+}));
+scene.add(particles);
+
+/* ============================================================
+   RESPONSIVE CAMERA FIT
+   ============================================================ */
+const FIT_H = 4.6;   // world units of height to keep in frame
+const FIT_W = 5.0;   // world units of width to keep in frame
+const VFOV  = THREE.MathUtils.degToRad(camera.fov);
+
+function fitCamera() {
+  const aspect = window.innerWidth / window.innerHeight;
+  const distH  = (FIT_H / 2) / Math.tan(VFOV / 2);
+  const distW  = (FIT_W / 2) / (Math.tan(VFOV / 2) * aspect);
+  camera.position.z = Math.max(distH, distW);
+  camera.aspect = aspect;
+  camera.updateProjectionMatrix();
+}
+
+/* ============================================================
+   DRAG ROTATION
+   ============================================================ */
+let dragging  = false;
+let lastX = 0, lastY = 0;
+let rotTargetY = 0.45, rotTargetX = 0.06;
+let rotY = 0.45, rotX = 0.06;
+let lastInteract = performance.now();
+
+function isUI(target) {
+  return !!(target.closest && target.closest('a, button, .swatch, nav, .btn'));
+}
+
+window.addEventListener('pointerdown', (e) => {
+  if (isUI(e.target)) return;
+  dragging = true;
+  lastX = e.clientX; lastY = e.clientY;
+  lastInteract = performance.now();
+});
+
+window.addEventListener('pointermove', (e) => {
+  if (!dragging) return;
+  const dx = e.clientX - lastX;
+  const dy = e.clientY - lastY;
+  lastX = e.clientX; lastY = e.clientY;
+  rotTargetY += dx * 0.0062;
+  rotTargetX  = THREE.MathUtils.clamp(rotTargetX + dy * 0.0042, -0.7, 0.7);
+  lastInteract = performance.now();
+});
+
+function endDrag() {
+  if (!dragging) return;
+  dragging = false;
+  lastInteract = performance.now();
+}
+window.addEventListener('pointerup', endDrag);
+window.addEventListener('pointercancel', endDrag);
+window.addEventListener('pointerleave', endDrag);
+
+/* ============================================================
+   SCROLL KEYFRAMES
+   ============================================================ */
+const KEYFRAMES = [
+  { x:  0.00, y: -0.25, s: 0.95 },  // hero
+  { x:  1.55, y:  0.00, s: 0.86 },  // features  (model → right)
+  { x: -1.55, y:  0.00, s: 0.86 },  // colors    (model → left)
+  { x:  0.00, y: -0.18, s: 0.80 }   // cta
+];
+
+let scrollP = 0, scrollTarget = 0;
+
+function updateScrollTarget() {
+  const max = document.documentElement.scrollHeight - window.innerHeight;
+  scrollTarget = max > 0 ? window.scrollY / max : 0;
+}
+window.addEventListener('scroll', updateScrollTarget, { passive: true });
+
+/* ============================================================
+   COLOUR PALETTES
+   ============================================================ */
+const PALETTES = [
+  { name: 'Obsidian Gold',  shell: 0x191b1f, accent: 0xc9a227, ui: '#c9a227',
+    desc: 'Anodised black aluminium with 24k gold-plated accents.' },
+  { name: 'Arctic Chrome',  shell: 0xd6dae1, accent: 0x8f98a8, ui: '#9aa4b6',
+    desc: 'Bead-blasted silver with mirror-polished chrome hardware.' },
+  { name: 'Ember',          shell: 0x3a1c14, accent: 0xff6b35, ui: '#ff6b35',
+    desc: 'Burnt-copper shell with a molten orange anodised ring.' },
+  { name: 'Sage',           shell: 0x27332c, accent: 0x9fd3b5, ui: '#9fd3b5',
+    desc: 'Deep forest green with soft mint titanium detailing.' },
+  { name: 'Ultraviolet',    shell: 0x241a3d, accent: 0xa78bfa, ui: '#a78bfa',
+    desc: 'Midnight violet with an iridescent lavender finish.' }
+];
+
+let colorTween = null;
+
+function applyPalette(index) {
+  const p = PALETTES[index];
+
+  colorTween = {
+    from: { shell: materials.shell.color.clone(), accent: materials.accent.color.clone() },
+    to:   { shell: new THREE.Color(p.shell),      accent: new THREE.Color(p.accent) },
+    t: 0, dur: 0.75
+  };
+
+  document.documentElement.style.setProperty('--accent', p.ui);
+  document.getElementById('swatchName').textContent = p.name;
+  document.getElementById('swatchDesc').textContent = p.desc;
+
+  document.querySelectorAll('.swatch').forEach((el, i) => {
+    el.classList.toggle('active', i === index);
+  });
+}
+
+/* build swatch buttons */
+const swatchWrap = document.getElementById('swatches');
+PALETTES.forEach((p, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'swatch';
+  btn.type = 'button';
+  btn.setAttribute('aria-label', p.name);
+  btn.innerHTML = `<i style="background:linear-gradient(140deg, #${new THREE.Color(p.shell).getHexString()}, #${new THREE.Color(p.accent).getHexString()})"></i>`;
+  btn.addEventListener('click', () => applyPalette(i));
+  swatchWrap.appendChild(btn);
+});
+applyPalette(0);
+
+/* ============================================================
+   SCROLL REVEAL
+   ============================================================ */
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => {
+    if (entry.isIntersecting) entry.target.classList.add('visible');
+  });
+}, { threshold: 0.25 });
+
+document.querySelectorAll('.panel').forEach((el) => observer.observe(el));
+
+/* ============================================================
+   RESIZE
+   ============================================================ */
+function onResize() {
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  fitCamera();
+  updateScrollTarget();
+}
+window.addEventListener('resize', onResize);
+fitCamera();
+updateScrollTarget();
+
+/* ============================================================
+   ANIMATION LOOP
+   ============================================================ */
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t  = clock.getElapsedTime();
+
+  /* ---- idle auto-rotation ---- */
+  if (!dragging && performance.now() - lastInteract > 2600) {
+    rotTargetY += 0.0022 * dt * 60;
+  }
+
+  /* ---- smooth rotation ---- */
+  const k = 1 - Math.pow(0.001, dt);   // frame-rate independent lerp
+  rotY += (rotTargetY - rotY) * k * 0.85;
+  rotX += (rotTargetX - rotX) * k * 0.85;
+
+  pivot.rotation.y = rotY;
+  pivot.rotation.x = rotX;
+
+  /* ---- gentle float ---- */
+  model.position.y = -0.30 + Math.sin(t * 0.85) * 0.035;
+
+  /* ---- scroll interpolation ---- */
+  scrollP += (scrollTarget - scrollP) * k * 0.7;
+
+  const seg   = scrollP * (KEYFRAMES.length - 1);
+  const idx   = Math.min(Math.floor(seg), KEYFRAMES.length - 2);
+  const fRaw  = seg - idx;
+  const f     = fRaw * fRaw * (3 - 2 * fRaw);  // smoothstep
+
+  const a = KEYFRAMES[idx];
+  const b = KEYFRAMES[idx + 1];
+
+  /* horizontal offset scales down on narrow screens */
+  const aspect = window.innerWidth / window.innerHeight;
+  const xMul   = THREE.MathUtils.clamp(aspect / 1.6, 0.30, 1);
+
+  const px = THREE.MathUtils.lerp(a.x, b.x, f) * xMul;
+  const py = THREE.MathUtils.lerp(a.y, b.y, f);
+  const ps = THREE.MathUtils.lerp(a.s, b.s, f);
+
+  productGroup.position.x += (px - productGroup.position.x) * k * 0.8;
+  productGroup.position.y += (py - productGroup.position.y) * k * 0.8;
+  const curS = productGroup.scale.x;
+  productGroup.scale.setScalar(curS + (ps - curS) * k * 0.8);
+
+  /* ---- colour tween ---- */
+  if (colorTween) {
+    colorTween.t += dt / colorTween.dur;
+    const p = Math.min(colorTween.t, 1);
+    const e = p * p * (3 - 2 * p);
+    materials.shell.color.copy(colorTween.from.shell).lerp(colorTween.to.shell, e);
+    materials.accent.color.copy(colorTween.from.accent).lerp(colorTween.to.accent, e);
+    if (p >= 1) colorTween = null;
+  }
+
+  /* ---- particles drift ---- */
+  particles.rotation.y = t * 0.018;
+  particles.rotation.x = Math.sin(t * 0.12) * 0.05;
+
+  renderer.render(scene, camera);
+}
+
+/* ============================================================
+   LOADER
+   ============================================================ */
+const loadBar = document.getElementById('loadBar');
+const loader  = document.getElementById('loader');
+let progress  = 0;
+
+const loaderInterval = setInterval(() => {
+  progress = Math.min(progress + Math.random() * 18 + 6, 100);
+  loadBar.style.width = progress + '%';
+
+  if (progress >= 100) {
+    clearInterval(loaderInterval);
+    setTimeout(() => {
+      loader.classList.add('done');
+      animate();                       // start the loop once we're "loaded"
+    }, 320);
+  }
+}, 110);
+</script>
+</body>
+</html>

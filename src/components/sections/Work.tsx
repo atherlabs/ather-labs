@@ -6,12 +6,12 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 
 const projects = [
-  { id: 1, title: 'Nova SaaS Dashboard', category: 'Web App', year: '2026', image: '/projects/project-1.jpg', tech: 'Next.js · TypeScript · Tailwind' },
-  { id: 2, title: 'Fintech Mobile App', category: 'Mobile', year: '2026', image: '/projects/project-2.jpg', tech: 'React Native · Node.js' },
-  { id: 3, title: 'AI Business Assistant', category: 'AI', year: '2026', image: '/projects/project-3.jpg', tech: 'GPT-4 · LangChain · RAG' },
-  { id: 4, title: 'Commerce Platform', category: 'E-commerce', year: '2025', image: '/projects/project-4.jpg', tech: 'Next.js · Stripe · PostgreSQL' },
-  { id: 5, title: '3D Product Showcase', category: '3D Web', year: '2025', image: '/projects/project-5.jpg', tech: 'React Three Fiber · GSAP' },
-  { id: 6, title: 'Portfolio Platform', category: 'Web', year: '2025', image: '/projects/project-6.jpg', tech: 'Next.js · Framer Motion' },
+  { id: 1, title: 'Nova SaaS Dashboard', category: 'Web App', year: '2026', image: '/projects/project-1.jpg', tech: 'Next.js · TypeScript · Tailwind', demo: '/demos/Nova Saas Dashboard.html' },
+  { id: 2, title: 'Fintech Mobile App', category: 'Mobile', year: '2026', image: '/projects/project-2.jpg', tech: 'React Native · Node.js', demo: '/demos/Fintech Mobile app.html' },
+  { id: 3, title: 'AI Business Assistant', category: 'AI', year: '2026', image: '/projects/project-3.jpg', tech: 'GPT-4 · LangChain · RAG', demo: '/demos/business ai.html' },
+  { id: 4, title: 'Commerce Platform', category: 'E-commerce', year: '2025', image: '/projects/project-4.jpg', tech: 'Next.js · Stripe · PostgreSQL', demo: '/demos/Ecommerce website.html' },
+  { id: 5, title: '3D Product Showcase', category: '3D Web', year: '2025', image: '/projects/project-5.jpg', tech: 'React Three Fiber · GSAP', demo: '/demos/aura 3d portfolio.html' },
+  { id: 6, title: 'Portfolio Platform', category: 'Web', year: '2025', image: '/projects/project-6.jpg', tech: 'Next.js · Framer Motion', demo: '/demos/portfolio arav mehta.html' },
 ];
 
 export default function Work() {
@@ -33,13 +33,16 @@ export default function Work() {
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-16">
         {projects.map((project, index) => (
-          <motion.div
+          <motion.a
             key={project.id}
+            href={project.demo}
+            target="_blank"
+            rel="noopener noreferrer"
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: index * 0.08 }}
-            className="group relative glass-panel rounded-2xl overflow-hidden cursor-pointer hover:border-ather-cyan/40 transition-all duration-300 hover:-translate-y-1"
+            className="block group relative glass-panel rounded-2xl overflow-hidden cursor-pointer hover:border-ather-cyan/40 transition-all duration-300 hover:-translate-y-1"
           >
             {/* Image container */}
             <div className="relative h-[340px] overflow-hidden">
@@ -72,11 +75,11 @@ export default function Work() {
                   {project.tech}
                 </p>
                 <div className="opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 font-mono text-xs uppercase tracking-widest text-ather-cyan mt-3">
-                  View Project →
+                  Visit Live Demo →
                 </div>
               </div>
             </div>
-          </motion.div>
+          </motion.a>
         ))}
       </div>
 
