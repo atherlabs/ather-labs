@@ -3,12 +3,12 @@
 import { motion } from 'framer-motion';
 
 const gifs = [
-  { id: 1, src: '/assets/gif1.gif', alt: 'Tech GIF 1', label: 'AI & Neural Nets' },
-  { id: 2, src: '/assets/gif2.gif', alt: 'Tech GIF 2', label: 'Cyber Systems' },
-  { id: 3, src: '/assets/gif3.gif', alt: 'Tech GIF 3', label: 'Quantum Tech' },
-  { id: 4, src: '/assets/gif4.gif', alt: 'Tech GIF 4', label: '3D Realtime' },
-  { id: 5, src: '/assets/gif5.gif', alt: 'Tech GIF 5', label: 'Web3 & Node' },
-  { id: 6, src: '/assets/gif6.gif', alt: 'Tech GIF 6', label: 'Cloud Compute' },
+  { id: 1, src: '/assets/gif1.gif', label: 'AI & Neural Nets' },
+  { id: 2, src: '/assets/gif2.gif', label: 'Cyber Systems' },
+  { id: 3, src: '/assets/gif3.gif', label: 'Quantum Tech' },
+  { id: 4, src: '/assets/gif4.gif', label: '3D Realtime' },
+  { id: 5, src: '/assets/gif5.gif', label: 'Web3 & Node' },
+  { id: 6, src: '/assets/gif6.gif', label: 'Cloud Compute' },
 ];
 
 const GifStrip = () => {
@@ -27,25 +27,20 @@ const GifStrip = () => {
           {marqueeItems.map((gif, index) => (
             <div
               key={`${gif.id}-${index}`}
-              className="h-24 w-40 rounded-xl overflow-hidden glass-panel flex-shrink-0 relative group flex items-center justify-center border border-white/10 hover:border-ather-cyan/40 transition-all duration-300"
+              className="h-24 w-40 rounded-xl glass-panel flex-shrink-0 flex items-center justify-center relative overflow-hidden group border border-white/10 hover:border-ather-cyan/40 transition-all duration-300"
             >
+              {/* Optional image overlay slot if images are added later */}
               <img
                 src={gif.src}
-                alt={gif.alt}
-                className="w-full h-full object-cover rounded-xl opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300"
+                alt={gif.label}
+                className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
                 onError={(e) => {
-                  // Fallback when placeholder image file isn't uploaded yet
                   e.currentTarget.style.display = 'none';
                 }}
               />
-              <div className="absolute inset-0 flex flex-col items-center justify-center p-2 text-center bg-ather-dark/60 backdrop-blur-xs group-hover:bg-ather-dark/30 transition-all">
-                <span className="text-[10px] font-mono text-ather-cyan tracking-wider uppercase mb-1">
-                  GIF {gif.id}
-                </span>
-                <span className="text-xs font-heading font-medium text-white/90 line-clamp-1">
-                  {gif.label}
-                </span>
-              </div>
+              <span className="relative z-10 font-mono text-xs uppercase tracking-widest text-white/70 text-center px-3">
+                {gif.label}
+              </span>
             </div>
           ))}
         </motion.div>

@@ -2,7 +2,6 @@
 
 import React from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { motion } from 'framer-motion';
 
 const projects = [
@@ -85,12 +84,7 @@ export default function Work() {
 
       {/* Bottom CTA */}
       <div className="text-center mt-16">
-        <Link
-          href="/#contact"
-          className="w-full sm:w-auto inline-block text-center bg-ather-cyan text-black font-mono text-xs uppercase tracking-widest rounded-full px-8 py-4 hover:bg-white transition-colors"
-        >
-          Start Your Project →
-        </Link>
+        <a href="/#contact" className="inline-block bg-ather-cyan text-black font-mono text-xs uppercase tracking-widest rounded-full px-8 py-4 hover:bg-white transition-colors duration-300">Start Your Project →</a>
       </div>
     </section>
   );

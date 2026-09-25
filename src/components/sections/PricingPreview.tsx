@@ -94,7 +94,7 @@ export default function PricingPreview() {
           </p>
           <Link
             href="/pricing"
-            className="w-full sm:w-auto inline-block text-center bg-transparent text-white border border-white/40 font-mono text-xs uppercase tracking-widest rounded-full px-8 py-4 hover:bg-white hover:text-black transition-colors duration-300"
+            className="inline-block bg-transparent text-white border border-white/40 font-mono text-xs uppercase tracking-widest rounded-full px-8 py-4 hover:bg-white hover:text-black transition-colors duration-300"
           >
             See Full Pricing →
           </Link>

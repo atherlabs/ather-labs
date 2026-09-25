@@ -162,7 +162,7 @@ export default function PricingPage() {
             </p>
             <a
               href="/#contact"
-              className="w-full sm:w-auto inline-block text-center bg-ather-cyan text-black font-mono text-xs uppercase tracking-widest rounded-full px-8 py-4 hover:bg-white transition-colors"
+              className="inline-block bg-ather-cyan text-black font-mono text-xs uppercase tracking-widest rounded-full px-8 py-4 hover:bg-white transition-colors duration-300"
             >
               Get a Custom Quote
             </a>
